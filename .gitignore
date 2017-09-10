@@ -1,0 +1,16 @@
+.settings/
+*/settings/
+*/target/
+.classpath
+*/bin/
+*.iml
+.idea/
+pro-tech-service-market-v2-core/.project
+pro-tech-service-market-v2-web/.project
+pro-tech-service-market-v2-platform/.project
+/bin/
+.project
+*/target/*
+target/*
+/target/
+rebel.xml

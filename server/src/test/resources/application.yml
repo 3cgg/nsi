@@ -1,0 +1,11 @@
+cpp.netty :
+        server :
+            port : 8655
+            loopThread : 1
+            workerThread : 100
+            bsy:
+                thread :
+                    name : '-netty-server-executor-'
+                    alive-count : 3
+                    max-count : 9
+                    alive-time : 3600 # seconds
