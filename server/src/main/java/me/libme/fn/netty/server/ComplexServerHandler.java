@@ -1,13 +1,22 @@
 package me.libme.fn.netty.server;
 
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.*;
+import me.libme.fn.netty.util.JStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map.Entry;
+
+import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static io.netty.handler.codec.rtsp.RtspHeaders.Names.CONNECTION;
+import static io.netty.handler.codec.stomp.StompHeaders.CONTENT_LENGTH;
 
 public class ComplexServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
@@ -35,11 +44,39 @@ public class ComplexServerHandler extends SimpleChannelInboundHandler<FullHttpRe
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest msg) {
     	
-    	if(LOGGER.isDebugEnabled()){
-    		LOGGER.debug("access to url : "+msg.uri());
-    	}
-    	
+
+        LOGGER.debug("access to url : "+msg.uri());
+
     	HttpHeaders headers = msg.headers();
+
+        String val= headers.get("HEAD-FOR-TEST");
+        if("HEAD-FOR-TEST".equals(val)){
+            StringBuffer stringBuffer=new StringBuffer();
+            if (!headers.isEmpty()) {
+                stringBuffer.append(String.format(title, "REQUEST HEADER")).append("\r\n");
+                for (Entry<String, String> h: headers) {
+                    String key = h.getKey();
+                    String value = h.getValue();
+                    stringBuffer.append(key).append(" = ").append(value).append("\r\n");
+                }
+                stringBuffer.append("\r\n");
+
+                boolean keepAlive = HttpUtil.isKeepAlive(msg);
+                FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(JStringUtils.utf8(stringBuffer.toString())));
+                response.headers().set(CONTENT_TYPE, "text/plain");
+                response.headers().setInt(CONTENT_LENGTH, response.content().readableBytes());
+
+                if (!keepAlive) {
+                    ctx.write(response).addListener(ChannelFutureListener.CLOSE);
+                } else {
+                    response.headers().set(CONNECTION, KEEP_ALIVE);
+                    ctx.write(response);
+                }
+                return;
+            }
+
+        }
+
     	if(LOGGER.isDebugEnabled()){
     		StringBuffer stringBuffer=new StringBuffer();
             if (!headers.isEmpty()) {

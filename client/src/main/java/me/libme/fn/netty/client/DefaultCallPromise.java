@@ -27,7 +27,10 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  */
 public class DefaultCallPromise<V> implements CallPromise<V> {
 
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultCallPromise.class);
+
+	private final String sequenceIdentity;
 
 	private ChannelFuture channelFuture;
 
@@ -61,9 +64,10 @@ public class DefaultCallPromise<V> implements CallPromise<V> {
 	
 	private List<GenericPromiseListener<? extends CallPromise<? super V>>> listeners=new ArrayList<>();
 	
-	DefaultCallPromise(ChannelRunnable channelRunnable,Future<Channel> channelFutureFromPool) {
+	DefaultCallPromise(ChannelRunnable channelRunnable,Future<Channel> channelFutureFromPool,String sequenceIdentity) {
 		this.channelRunnable=channelRunnable;
 		this.channelFutureFromPool=channelFutureFromPool;
+		this.sequenceIdentity=sequenceIdentity;
 	}
 
 	@Override
@@ -536,6 +540,8 @@ public class DefaultCallPromise<V> implements CallPromise<V> {
 			return defaultCallPromise.channelFuture;
 		}
 	}
-	
-	
+
+	public String getSequenceIdentity() {
+		return sequenceIdentity;
+	}
 }

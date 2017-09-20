@@ -3,7 +3,11 @@ package me.libme.fn.netty.client;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.pool.SimpleChannelPool;
 import io.netty.handler.codec.http.*;
+import me.libme.fn.netty.msg.HeaderNames;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -12,6 +16,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public abstract class ChannelRunnable {
+
+	private final Logger LOGGER= LoggerFactory.getLogger(this.getClass());
 	
 	private final SimpleRequest request;
 	
@@ -58,6 +64,10 @@ public abstract class ChannelRunnable {
 		try{
 			DefaultFullHttpRequest fullHttpRequest=prepare();
 			ChannelFuture channelFuture= doRequest(channel,fullHttpRequest);
+			SimpleChannelPool channelPool = channel.attr(NioChannelExecutor.NIO_CHANNEL_EXECUTOR_ATTRIBUTE_KEY).get().getChannelPool();
+			channelPool.release(channel);
+			LOGGER.info("completely send message ["+request.getHeader(HeaderNames.SEQUENCE_IDENTITY)+" ; " +
+					request.getUrl()+" ], release channel to pool : " +channel);
 			return channelFuture;
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -151,6 +161,10 @@ public abstract class ChannelRunnable {
 	public ChannelRunnable failedCall(ChannelFailedCall failedCall) {
 		this.failedCall = failedCall;
 		return this;
+	}
+
+	void addHeader(String name,String value){
+		request.addHeader(name,value);
 	}
 
 }

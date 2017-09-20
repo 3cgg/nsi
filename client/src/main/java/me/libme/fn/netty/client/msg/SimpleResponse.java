@@ -1,6 +1,7 @@
 package me.libme.fn.netty.client.msg;
 
 import me.libme.fn.netty.msg.BodyDecoder;
+import me.libme.fn.netty.msg.HeaderNames;
 
 /**
  * Created by J on 2017/9/7.
@@ -27,5 +28,8 @@ public class SimpleResponse implements IResponse {
         return msgHeader.get(name);
     }
 
-
+    @Override
+    public String sequenceIdentity() {
+        return getHeader(HeaderNames.SEQUENCE_IDENTITY);
+    }
 }

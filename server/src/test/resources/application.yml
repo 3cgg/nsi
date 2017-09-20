@@ -1,5 +1,6 @@
 cpp.netty :
         server :
+            host : 0.0.0.0
             port : 8655
             loopThread : 1
             workerThread : 100

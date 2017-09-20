@@ -3,7 +3,12 @@ package me.libme.fn.netty.server;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
+import me.libme.fn.netty.msg.HeaderNames;
 import me.libme.fn.netty.util.JStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
@@ -13,6 +18,10 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
  * Created by J on 2017/9/7.
  */
 public class SimpleHttpResponse implements HttpResponse {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleHttpResponse.class);
+
+    private static final String title="------------%s------------";
 
     private final ChannelHandlerContext ctx;
 
@@ -61,9 +70,33 @@ public class SimpleHttpResponse implements HttpResponse {
             response.headers().set(HttpHeaderNames.CONNECTION,
                     HttpHeaderValues.CLOSE);
         }
+        String sequenceIdentity=httpRequest.sequenceIdentity();
+
+        if(JStringUtils.isNotNullOrEmpty(sequenceIdentity)){
+            response.headers().set(HeaderNames.SEQUENCE_IDENTITY,sequenceIdentity);
+        }
+
+        response.headers().set(HeaderNames.REQUEST_URL_IDENTITY,httpRequest.getUrl());
+
+        if(LOGGER.isDebugEnabled()){
+            StringBuffer stringBuffer=new StringBuffer();
+            if (!response.headers().isEmpty()) {
+                stringBuffer.append(String.format(title, "RESPONSE HEADER")).append("\r\n");
+                for (Map.Entry<String, String> h: response.headers()) {
+                    String key = h.getKey();
+                    String value = h.getValue();
+                    stringBuffer.append(key).append(" = ").append(value).append("\r\n");
+                }
+                stringBuffer.append("\r\n");
+            }
+            LOGGER.debug(stringBuffer.toString());
+        }
+
+
         // Write the response, should use embedded IO thread.
         if(ctx.executor().inEventLoop()){
             ctx.writeAndFlush(response);
+            LOGGER.info("completely write response : "+httpRequest.getUrl());
             if(!keepAlive){
                 ctx.close();
             }
@@ -72,6 +105,7 @@ public class SimpleHttpResponse implements HttpResponse {
                 @Override
                 public void run() {
                     ctx.writeAndFlush(response);
+                    LOGGER.info("completely write response : "+httpRequest.getUrl());
                     if(!keepAlive){
                         ctx.close();
                     }

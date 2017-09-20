@@ -7,11 +7,21 @@ import me.libme.fn.netty.JModel;
  */
 public class ServerConfig implements JModel{
 
+    private String host;
+
     private int port;
 
     private int loopThread;
 
     private int workerThread;
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
 
     public int getLoopThread() {
         return loopThread;

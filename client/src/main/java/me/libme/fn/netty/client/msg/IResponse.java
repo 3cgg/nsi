@@ -13,4 +13,6 @@ public interface IResponse {
     public String getHeader(String name);
 
 
+    String sequenceIdentity();
+
 }

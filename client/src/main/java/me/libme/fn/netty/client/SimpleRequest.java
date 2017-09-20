@@ -74,5 +74,9 @@ public abstract class SimpleRequest {
 	public byte[] getContent(){
 		return messageBody.body();
 	}
-	
+
+	public String getHeader(String name){
+		return msgHeader.get(name);
+	}
+
 }

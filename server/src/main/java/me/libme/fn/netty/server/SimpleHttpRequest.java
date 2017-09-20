@@ -3,6 +3,7 @@ package me.libme.fn.netty.server;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
+import me.libme.fn.netty.msg.HeaderNames;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -66,7 +67,7 @@ public class SimpleHttpRequest implements HttpRequest {
     }
 
     @Override
-    public Object getHeader(String name) {
+    public String getHeader(String name) {
         HttpHeaders headers = fullHttpRequest.headers();
         return headers.get(name);
     }
@@ -131,4 +132,10 @@ public class SimpleHttpRequest implements HttpRequest {
     public HttpResponse getHttpResponse() {
         return httpResponse;
     }
+
+    public String sequenceIdentity() {
+        return getHeader(HeaderNames.SEQUENCE_IDENTITY);
+    }
+
+
 }

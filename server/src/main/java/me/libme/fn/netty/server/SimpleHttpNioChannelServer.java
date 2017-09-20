@@ -1,6 +1,8 @@
 package me.libme.fn.netty.server;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -15,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SimpleHttpNioChannelServer implements Closeable {
 
@@ -27,6 +30,10 @@ public class SimpleHttpNioChannelServer implements Closeable {
 	private EventLoopGroup bossGroup;
 	
 	private EventLoopGroup workerGroup;
+
+	private AtomicInteger workerThreadIndicator=new AtomicInteger(0);
+
+	private AtomicInteger bossThreadIndicator=new AtomicInteger(0);
 
 	public SimpleHttpNioChannelServer(ServerConfig serverConfig,boolean useSSL) {
 		this.serverConfig = serverConfig;
@@ -52,13 +59,13 @@ public class SimpleHttpNioChannelServer implements Closeable {
         EventLoopGroup bossGroup = new NioEventLoopGroup(serverConfig.getLoopThread(),new ThreadFactory() {
 			@Override
 			public Thread newThread(Runnable r) {
-				return new Thread(r,"netty-server-acceptor-io-port-"+serverConfig.getPort());
+				return new Thread(r,"netty-server-acceptor-io-port-"+serverConfig.getPort()+"-"+bossThreadIndicator.incrementAndGet());
 			}
 		});
         EventLoopGroup workerGroup = new NioEventLoopGroup(serverConfig.getWorkerThread(),new ThreadFactory() {
 			@Override
 			public Thread newThread(Runnable r) {
-				return new Thread(r,"netty-server-worker-io-port-"+serverConfig.getPort());
+				return new Thread(r,"netty-server-worker-io-port-"+serverConfig.getPort()+"-"+workerThreadIndicator.incrementAndGet());
 			}
 		});
         try {
@@ -66,18 +73,20 @@ public class SimpleHttpNioChannelServer implements Closeable {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
              .channel(NioServerSocketChannel.class)
-             .handler(new LoggingHandler(LogLevel.INFO))
+					.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+             .handler(new LoggingHandler(LogLevel.DEBUG))
              .childHandler(new SimpleHttpServerInitializer(sslCtx))
-             .bind(serverConfig.getPort());
+             .bind(serverConfig.getHost(),serverConfig.getPort());
             this.bossGroup=bossGroup;
             this.workerGroup=workerGroup;
 			LOGGER.info("Open your web browser and navigate to " +
-                    (useSSL? "https" : "http") + "://127.0.0.1:" + serverConfig.getPort() + '/');
+                    (useSSL? "https" : "http") + "://"+serverConfig.getHost()+":" + serverConfig.getPort() + '/');
             
         } catch (Exception e){
         	LOGGER.error(e.getMessage(), e);
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
+            throw new RuntimeException(e);
         }
 	}
 

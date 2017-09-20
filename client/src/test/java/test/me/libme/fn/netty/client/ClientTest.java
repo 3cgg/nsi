@@ -11,17 +11,20 @@ import me.libme.fn.netty.client.msg.IResponse;
 import me.libme.fn.netty.msg.BodyDecoder;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by J on 2017/9/7.
  */
 
 public class ClientTest {
+
+    private static final Logger LOGGER= LoggerFactory.getLogger(ClientTest.class);
 
     private SimpleChannelExecutor simpleChannelExecutor;
 
@@ -39,33 +42,33 @@ public class ClientTest {
     public void call(){
 
 
-        for(int i=0;i<1000;i++){
+        for(int i=0;i<10000;i++){
             executorService.execute(new Runnable() {
                 @Override
                 public void run() {
-                    SimpleRequest simpleRequest=SimpleRequest.post();
-                    simpleRequest.setUrl(simpleChannelExecutor.uri()+"/_test4netty_/name");
-                    FormMsgBody formMsgBody=new FormMsgBody();
-                    final String name="J-"+new Random().nextInt(9999);
-                    formMsgBody.addEntry("name",name);
+                    SimpleRequest simpleRequest = SimpleRequest.post();
+                    simpleRequest.setUrl(simpleChannelExecutor.uri() + "/_test4netty_/name");
+                    FormMsgBody formMsgBody = new FormMsgBody();
+                    final String name = "J-" + new Random().nextInt(9999);
+                    formMsgBody.addEntry("name", name);
 
-                    formMsgBody.addEntry("age",20);
-                    formMsgBody.addEntry("sex","&8%Male%^&");
-                    formMsgBody.addEntry("seq","09");
+                    formMsgBody.addEntry("age", 20);
+                    formMsgBody.addEntry("sex", "&8%Male%^&");
+                    formMsgBody.addEntry("seq", "09");
 
                     simpleRequest.setMessageBody(formMsgBody);
 
-                    simpleRequest.addHeader(HttpHeaderNames.CONNECTION.toString(),HttpHeaderValues.KEEP_ALIVE.toString())
+                    simpleRequest.addHeader(HttpHeaderNames.CONNECTION.toString(), HttpHeaderValues.KEEP_ALIVE.toString())
                             .addHeader(HttpHeaderNames.CONTENT_TYPE.toString(), HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED.toString())
-                            .addHeader(HttpHeaderNames.ACCEPT_ENCODING.toString(),HttpHeaderValues.GZIP.toString());
+                            .addHeader(HttpHeaderNames.ACCEPT_ENCODING.toString(), HttpHeaderValues.GZIP.toString());
                     try {
-                        CallPromise callPromise= simpleChannelExecutor.execute(new NioChannelRunnable(simpleRequest));
-                        IResponse response= (IResponse) callPromise.get();
-                        String resultName= response.decode(DECODER);
-                        if(!resultName.contains(name)){
-                            throw new RuntimeException("response : "+resultName +"; request : "+name);
+                        CallPromise callPromise = simpleChannelExecutor.execute(new NioChannelRunnable(simpleRequest));
+                        IResponse response = (IResponse) callPromise.get();
+                        String resultName = response.decode(DECODER);
+                        if (!resultName.contains(name)) {
+                            throw new RuntimeException("response : " + resultName + "; request : " + name);
                         }
-                        System.out.println("response : "+resultName +"; request : "+name);
+                        LOGGER.info("response : " + resultName + "; request : " + name);
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -77,7 +80,7 @@ public class ClientTest {
 
 
 
-        System.out.println("end-");
+        LOGGER.info("end-");
         try {
             Thread.sleep(1000*60*60);
         } catch (InterruptedException e) {

@@ -5,7 +5,7 @@ package me.libme.fn.netty.server;
  */
 public interface HttpRequest {
 
-    public Object getHeader(String name);
+    public String getHeader(String name);
 
     public String getParam(String name);
 

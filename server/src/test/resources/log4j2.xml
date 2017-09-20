@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="debug" strict="true" name="youapp-log4j2" packages="me.libme">
+    <Properties>
+        <Property name="rolllogDir">d:/log</Property>
+        <Property name="rolllogRollingFile">server-log.log</Property>
+    </Properties>
+    <Appenders>
+        <Appender type="Console" name="appConsole">
+            <Layout type="PatternLayout" pattern="%d %p  %c [%t] %m %n"/>
+        </Appender>
+
+        <RollingFile name="rollingFile" fileName="${rolllogDir}/${rolllogRollingFile}" append="true"
+                     filePattern="${rolllogDir}/${date:yyyy-MM-dd}/${rolllogRollingFile}-%d{MM-dd-yyyy}-%i.log.gz"
+                     class="org.apache.log4j.rolling.TimeBasedRollingPolicy">
+            <PatternLayout pattern="%d{yyyy-MM-dd 'at' HH:mm:ss z} %-5level %class{36} [%t] %L %M - %msg%xEx%n"/>
+            <SizeBasedTriggeringPolicy size="100 MB"/>
+            <DefaultRolloverStrategy max="10000"/>
+        </RollingFile>
+
+    </Appenders>
+
+    <Loggers>
+
+        <Logger name="me.libme" level="debug" additivity="false">
+            <AppenderRef ref="appConsole"/>
+            <AppenderRef ref="rollingFile"/>
+        </Logger>
+
+
+    </Loggers>
+
+</Configuration>
